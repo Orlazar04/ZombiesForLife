@@ -3,128 +3,231 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using ZombieSpace;
 
+// Managing level progression in a scene and GUI 
+// Contributors: Olivia Lazar
 public class LevelManager : MonoBehaviour
-{
-    // Start is called before the first frame update
-    public float levelDuration = 60.0f;
-    float countDown = 0;
-    public static bool isGameOver = false;
-    public AudioClip gameOverSFX;
-    public AudioClip gameWonSFX;
-    public string nextlevel;
-    public Text timerText;
-    public Text gameText;
+{   
+    // Level Status
+    public static bool isLevelOver;
+    public static bool isLevelPaused;
+
+    public string nextLevel = "End";    // Name of the next level to be loaded
+
+    // GUI Elements
     public Text scoreText;
-    private int score = 0;
-    public float fallThreshold = -.5f;
-    public GameObject player;
+    public Text targetSafeText;
+    public Text targetThreatenedText;
+    public Text targetAttackedText;
+    public Slider targetSlider;
+    public Image collectedCross;
+    public Image collectedCheck;
 
-    void Start()
+    // Game messages
+    public Text lostText;
+    public Text cannotEscapeText;
+    public Text escapedText;
+
+    // Sound Elements
+    public AudioClip lostSFX;
+    public AudioClip escapedSFX;
+
+    private bool isTargetCollected;             // Whether the pickup is collected
+    private int levelScore;                     // Points awarded in the current level
+    private TargetPickupBehavior targetPickup;  // The pickup needed to progress to the next level
+    private string targetName;                  // Name of the target pickup
+    private TPStatus targetStatus;              // Status of target pickup
+
+    // Start is called before the first frame update
+    private void Start()
     {
-        isGameOver = false;
-        countDown = levelDuration;
-        SetTimerText();
-        UpdateScoreText();
+        // Initialize game stats
+        isLevelOver = false;
+        isLevelPaused = false;
+        isTargetCollected = false;
+        levelScore = 0;
+        UpdateScore(0);
 
-        if (player == null)
+        // Ininitialize target pickup stats
+        targetPickup = GameObject.FindGameObjectWithTag("Target Pickup").GetComponent<TargetPickupBehavior>();
+        if(targetPickup != null)
         {
-            player = GameObject.FindGameObjectWithTag("Player");
-            if (player == null)
-            {
-                Debug.LogError("Player not found. Make sure the player has the 'Player' tag.");
-            }
+            targetName = targetPickup.itemName;
+            targetStatus = targetPickup.status;
+            targetSlider.maxValue = targetPickup.health;
+            targetSlider.value = targetPickup.health;
+            UpdateTargetStatusGUI();
+        }
+        else
+        {
+            targetName = "Undefined";
+            targetStatus = TPStatus.Safe;
+            Debug.Log("Target pickup not found.");
         }
     }
 
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        if (!isGameOver)
+        // While the level is not over and not paused
+        if(!isLevelOver && !isLevelPaused)
         {
-            if (countDown > 0)
+            // Update target pickup status
+            if(targetStatus != targetPickup.status)
             {
-                countDown -= Time.deltaTime;
+                targetStatus = targetPickup.status;
+                UpdateTargetStatusGUI();
             }
-            else
+            
+            // Update target health timer GUI if target pickup is being attacked
+            if(targetStatus == TPStatus.Attacked)
             {
-                countDown = 0.0f;
-                LevelLost();
+                targetSlider.value = targetPickup.health;
             }
-            SetTimerText();
-        }
 
-        if (player != null && player.transform.position.y < fallThreshold)
+            // Lose level if target pickup is destroyed
+            if(targetStatus == TPStatus.Destroyed)
+            {
+                LevelLost(DefeatType.TargetDestroyed);
+            }
+        }
+    }
+
+    // Updates target status GUI
+    private void UpdateTargetStatusGUI()
+    {
+        targetSafeText.gameObject.SetActive(false);
+        targetThreatenedText.gameObject.SetActive(false);
+        targetAttackedText.gameObject.SetActive(false);
+        targetSlider.gameObject.SetActive(false);
+
+        switch(targetStatus)
         {
-            LevelLost();
+            // If target pickup is safe
+            case TPStatus.Safe:
+                targetSafeText.gameObject.SetActive(true);
+                break;
+            // If target pickup is being threatened
+            case TPStatus.Threatened:
+                targetThreatenedText.gameObject.SetActive(true);
+                break;
+            // If target pickup is being attacked
+            case TPStatus.Attacked:
+                targetAttackedText.gameObject.SetActive(true);
+                targetSlider.gameObject.SetActive(true);
+                break;
         }
-        //Debug.Log(countDown);
-        //Debug.Log(timerText);
     }
 
-
-    private void OnGUI()
+    // Updates the score and GUI by the given amount of points
+    public void UpdateScore(int points)
     {
-        //GUI.Box(new Rect(10, 10, 40, 30), countDown.ToString("0.00"));
+        levelScore += points;
+        scoreText.text = levelScore.ToString();
     }
 
-    void SetTimerText()
+    // Updates the target pickup collection and GUI to true
+    public void TargetCollected()
     {
-        countDown.ToString("f2");
-        timerText.text = countDown.ToString("f2");
+        isTargetCollected = true;
+        collectedCross.gameObject.SetActive(false);
+        collectedCheck.gameObject.SetActive(true);
     }
 
-    public void LevelLost()
+    // Initiates procedure for when current level is lost
+    public void LevelLost(DefeatType reason)
     {
-        isGameOver = true;
-        gameText.text = "GAME OVER!";
-        gameText.gameObject.SetActive(true);
-        Camera.main.GetComponent<AudioSource>().pitch = 1;
-        AudioSource.PlayClipAtPoint(gameOverSFX, Camera.main.transform.position);
-        Invoke("LoadCurrentLevel", 2);
-
-    }
-
-    public void LevelBeat()
-    {
-        isGameOver = true;
-        gameText.text = "YOU WIN!";
-        gameText.gameObject.SetActive(true);
-
-        Camera.main.GetComponent<AudioSource>().pitch = 2;
-        AudioSource.PlayClipAtPoint(gameWonSFX, Camera.main.transform.position);
-        if (SceneManager.GetActiveScene().name.Contains("3"))
+        isLevelOver = true;
+        
+        // Select game over message based on given reason
+        string message = "Empty";
+        switch(reason)
         {
-            gameText.text = "CONGRATULATIONS! YOU COMPLETED THE GAME!";
+            // If the target pickup is destroyed
+            case DefeatType.TargetDestroyed:
+                message = targetName + "was destroyed!";
+                break;
+            // If the player is killed
+            case DefeatType.PlayerKilled:
+                message = "You died!";
+                break;
         }
-        else if (!string.IsNullOrEmpty(nextlevel))
-        {
-            Invoke("LoadNextLevel", 2);
-        }
+        lostText.gameObject.SetActive(true);
+        lostText.text = message;
+
+        // Sound
+        Camera.main.GetComponent<AudioSource>().volume = 0f;
+        AudioSource.PlayClipAtPoint(lostSFX, Camera.main.transform.position);
+
+        Invoke("ReloadLevel", 2);
     }
 
-    void LoadNextLevel()
+    // Initiates an attempt to finish the current level
+    public void LevelFinishAttempt()
     {
-        SceneManager.LoadScene(nextlevel);
+        // Level can only be finished if target pickup is collected
+        if(!isTargetCollected)
+        {
+            StartCoroutine(FlashCannotEscapeText());
+        }
+        else
+        {
+            LevelFinished();
+        }
     }
 
-    void LoadCurrentLevel()
+    // Show that the level cannot be finished yet
+    private IEnumerator FlashCannotEscapeText()
+    {
+        cannotEscapeText.gameObject.SetActive(true);
+        yield return new WaitForSeconds(2.0f);
+        cannotEscapeText.gameObject.SetActive(false);
+    }
+
+    // Initiates procedure for when current level is finished
+    private void LevelFinished()
+    {
+        isLevelOver = true;
+        
+        escapedText.gameObject.SetActive(true);
+
+        // Sound
+        Camera.main.GetComponent<AudioSource>().volume = 0f;
+        AudioSource.PlayClipAtPoint(escapedSFX, Camera.main.transform.position);
+
+        Invoke("LoadNextLevel", 2);
+    }
+
+    // Loads the current level from the beginning 
+    private void ReloadLevel()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
-    void UpdateScoreText()
+
+    // Loads the next level with name nextLevel
+    // If nextLevel not given, game is won
+    private void LoadNextLevel()
     {
-        scoreText.text = "Score: " + score.ToString();
+        if(nextLevel != "End")
+        {
+            SceneManager.LoadScene(nextLevel);
+        }
+        else
+        {
+            Debug.Log("Add win functionality");
+        }
     }
 
-    public void AddScore(int value)
+    // Pauses the game
+    public void PauseLevel()
     {
-        if (countDown > levelDuration / 2)
-        {
-            // Double the score if collected in the first half of the level
-            value *= 2;
-        }
-        score += value;
-        UpdateScoreText();
+        isLevelPaused = true;
+    }
+
+    // Unpauses the game
+    public void UnpauseLevel()
+    {
+        isLevelPaused = false;
     }
 }
