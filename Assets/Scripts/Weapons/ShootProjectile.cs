@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Author: Tarif Khan
+// Author: Tarif Khan, Grace Calianese
 // This script serves as the way the player shoots projectiles
 public class ShootProjectile : MonoBehaviour
 {
     public GameObject projectilePrefab;
     public float projectileSpeed = 100;
     public Image reticleImage;
+    public AudioClip projectileSFX;
+    public int projectileDamage = 34;
 
     // Start is called before the first frame update
     void Start()
@@ -30,7 +32,7 @@ public class ShootProjectile : MonoBehaviour
 
             projectile.transform.SetParent(GameObject.FindGameObjectWithTag("ProjectileParent").transform);
 
-           // AudioSource.PlayClipAtPoint(spellSFX, transform.position);
+            AudioSource.PlayClipAtPoint(projectileSFX, transform.position);
         }
     }
 }
