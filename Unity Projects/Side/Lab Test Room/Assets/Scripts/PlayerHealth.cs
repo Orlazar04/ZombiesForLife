@@ -14,9 +14,9 @@ public class PlayerHealth : MonoBehaviour
     public Slider healthSlider;
 
     private int currentHealth;
-    private AudioSource hitSFX;
-
     private LevelManager lm;
+
+    private AudioSource hitSFX;
 
     // Start is called before the first frame update
     void Start()

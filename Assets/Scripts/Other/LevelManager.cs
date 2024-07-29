@@ -6,14 +6,12 @@ using UnityEngine.UI;
 using ZombieSpace;
 
 // Managing level progression in a scene and GUI 
-// Contributors: Olivia Lazar
+// Main Contributors: Olivia Lazar
 public class LevelManager : MonoBehaviour
 {   
-    // Level Status
-    public static bool isLevelOver;
-    public static bool isLevelPaused;
-
-    public string nextLevel = "End";    // Name of the next level to be loaded
+    // Level Initialization Values   
+    public int setDifficulty = 1;       // The value levelDifficulty will start as
+    public string nextLevel = "End";    // Name of the next level to be loaded 
 
     // GUI Elements
     public Text scoreText;
@@ -21,7 +19,8 @@ public class LevelManager : MonoBehaviour
     public Text targetThreatenedText;
     public Text targetAttackedText;
     public Slider targetSlider;
-    public Image collectedCross;
+    public Text targetText;
+    public Image collectedUncheck;
     public Image collectedCheck;
 
     // Game messages
@@ -33,18 +32,23 @@ public class LevelManager : MonoBehaviour
     public AudioClip lostSFX;
     public AudioClip escapedSFX;
 
-    private bool isTargetCollected;             // Whether the pickup is collected
+    // Level Attributes
+    public static LevelState levelState;     // Whether the level can operate
+    public static int levelDifficulty;       // Scale modifier for level dependent attributes
+
     private int levelScore;                     // Points awarded in the current level
+    private bool isTargetCollected;             // Whether the pickup is collected
     private TargetPickupBehavior targetPickup;  // The pickup needed to progress to the next level
     private string targetName;                  // Name of the target pickup
-    private TPStatus targetStatus;              // Status of target pickup
+    private PickupState targetStatus;           // Status of target pickup
 
     // Start is called before the first frame update
     private void Start()
     {
-        // Initialize game stats
-        isLevelOver = false;
-        isLevelPaused = false;
+        // Initialize level management values
+        levelState = LevelState.Active;
+        levelDifficulty = setDifficulty;
+
         isTargetCollected = false;
         levelScore = 0;
         UpdateScore(0);
@@ -55,23 +59,27 @@ public class LevelManager : MonoBehaviour
         {
             targetName = targetPickup.itemName;
             targetStatus = targetPickup.status;
+
+            // GUI
             targetSlider.maxValue = targetPickup.health;
             targetSlider.value = targetPickup.health;
-            UpdateTargetStatusGUI();
         }
         else
         {
             targetName = "Undefined";
-            targetStatus = TPStatus.Safe;
+            targetStatus = PickupState.Safe;
             Debug.Log("Target pickup not found.");
         }
+
+        targetText.text = targetName;
+        UpdateTargetStatusGUI();
     }
 
     // Update is called once per frame
     private void Update()
     {
-        // While the level is not over and not paused
-        if(!isLevelOver && !isLevelPaused)
+        // While the level is active
+        if(IsLevelActive())
         {
             // Update target pickup status
             if(targetStatus != targetPickup.status)
@@ -81,13 +89,13 @@ public class LevelManager : MonoBehaviour
             }
             
             // Update target health timer GUI if target pickup is being attacked
-            if(targetStatus == TPStatus.Attacked)
+            if(targetStatus == PickupState.Attacked)
             {
                 targetSlider.value = targetPickup.health;
             }
 
             // Lose level if target pickup is destroyed
-            if(targetStatus == TPStatus.Destroyed)
+            if(targetStatus == PickupState.Destroyed)
             {
                 LevelLost(DefeatType.TargetDestroyed);
             }
@@ -105,15 +113,15 @@ public class LevelManager : MonoBehaviour
         switch(targetStatus)
         {
             // If target pickup is safe
-            case TPStatus.Safe:
+            case PickupState.Safe:
                 targetSafeText.gameObject.SetActive(true);
                 break;
             // If target pickup is being threatened
-            case TPStatus.Threatened:
+            case PickupState.Threatened:
                 targetThreatenedText.gameObject.SetActive(true);
                 break;
             // If target pickup is being attacked
-            case TPStatus.Attacked:
+            case PickupState.Attacked:
                 targetAttackedText.gameObject.SetActive(true);
                 targetSlider.gameObject.SetActive(true);
                 break;
@@ -131,17 +139,23 @@ public class LevelManager : MonoBehaviour
     public void TargetCollected()
     {
         isTargetCollected = true;
-        collectedCross.gameObject.SetActive(false);
+        collectedUncheck.gameObject.SetActive(false);
         collectedCheck.gameObject.SetActive(true);
+    }
+
+    // Returns whether the level is running
+    public static bool IsLevelActive()
+    {
+        return (levelState == LevelState.Active);
     }
 
     // Initiates procedure for when current level is lost
     public void LevelLost(DefeatType reason)
     {
-        isLevelOver = true;
+        levelState = LevelState.Over;
         
         // Select game over message based on given reason
-        string message = "Empty";
+        string message = "Undefined";
         switch(reason)
         {
             // If the target pickup is destroyed
@@ -188,7 +202,7 @@ public class LevelManager : MonoBehaviour
     // Initiates procedure for when current level is finished
     private void LevelFinished()
     {
-        isLevelOver = true;
+        levelState = LevelState.Over;
         
         escapedText.gameObject.SetActive(true);
 
@@ -220,14 +234,14 @@ public class LevelManager : MonoBehaviour
     }
 
     // Pauses the game
-    public void PauseLevel()
+    public static void PauseLevel()
     {
-        isLevelPaused = true;
+        levelState = LevelState.Paused;
     }
 
     // Unpauses the game
-    public void UnpauseLevel()
+    public static void UnpauseLevel()
     {
-        isLevelPaused = false;
+        levelState = LevelState.Active;
     }
 }

@@ -2,65 +2,73 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using ZombieSpace;
 
-// Author : Tarif Khan, Grace Calianese
 // This script is meant for the zombies to attack our player and the player loses health
+// Main Contributors: Olivia Lazar
 public class PlayerHealth : MonoBehaviour
 {
-    // Start is called before the first frame update
-    public int startingHealth = 100;
-    int currentHealth;
-    public int damageAmount = 20;
-    //public AudioClip deadSfx;
+    public int maxHealth = 100;
+
+    public AudioClip deadSFX;
     public Slider healthSlider;
+
+    private int currentHealth;
+    private AudioSource hitSFX;
+
+    private LevelManager lm;
+
+    // Start is called before the first frame update
     void Start()
     {
-        currentHealth = startingHealth;
+        // Initiate health and GUI
+        currentHealth = maxHealth;
+        healthSlider.maxValue = currentHealth;
         healthSlider.value = currentHealth;
+
+        // Initialize sound
+        hitSFX = gameObject.GetComponent<AudioSource>();
+
+        // Initialize level manager
+        lm = FindObjectOfType<LevelManager>();
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        
     }
 
+    // Decrease health
     public void TakeDamage(int damageAmount)
     {
-        if (currentHealth > 0)
+        if(currentHealth > 0)
         {
             currentHealth -= damageAmount;
-            currentHealth = Mathf.Clamp(currentHealth, 0, 100);
-            healthSlider.value = currentHealth;
+            healthSlider.value = Mathf.Clamp(currentHealth, 0, maxHealth);
+            hitSFX.Play();
         }
-
-        if (currentHealth <= 0)
+        else
         {
             PlayerDies();
         }
-
-        Debug.Log("Current Health: " + currentHealth);
     }
 
-    void PlayerDies()
-    {
-        Debug.Log("Player is dead");
-        //AudioSource.PlayClipAtPoint(deadSfx, transform.position);
-        transform.Rotate(-90, 0, 0, Space.Self);
-        FindObjectOfType<LevelManager>().LevelLost();
-    }
-
-
-    //Add the given health amount to the player's current health,
-    //between 0 and 100, update health slider
+    // Increase health
     public void TakeHealth(int healthAmount)
     {
-        if (currentHealth < 100)
+        if(currentHealth < maxHealth)
         {
             currentHealth += healthAmount;
-            currentHealth = Mathf.Clamp(currentHealth, 0, 100);
-            healthSlider.value = currentHealth;
+            healthSlider.value = Mathf.Clamp(currentHealth, 0, maxHealth);
         }
-        Debug.Log("Current Health with loot: " + currentHealth);
+    }
+
+    // Initiates procedure for when player dies
+    private void PlayerDies()
+    {
+        lm.LevelLost(DefeatType.PlayerKilled);
+        AudioSource.PlayClipAtPoint(deadSFX, transform.position);
+        transform.Rotate(-90, 0, 0, Space.Self);
     }
 }
