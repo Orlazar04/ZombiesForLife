@@ -45,7 +45,6 @@ public class EnemyBehavior : MonoBehaviour
         currentHealth = startingHealth;
         anim = GetComponent<Animator>();
         isDead = false;
-        nextDestination = player.transform.position;
         currentState = FSMStates.Idle;
     }
 
@@ -96,8 +95,9 @@ public class EnemyBehavior : MonoBehaviour
             {
                 currentState = FSMStates.Chase;
             }
-            FaceTarget(nextDestination);
-            transform.position = Vector3.MoveTowards(transform.position, new Vector3(nextDestination.x, 0, nextDestination.z), step);
+            FaceTarget(player.transform.position);
+            transform.position = Vector3.MoveTowards(transform.position,
+                new Vector3(player.transform.position.x, 0, player.transform.position.z), step);
         }
         else
         {
@@ -119,7 +119,8 @@ public class EnemyBehavior : MonoBehaviour
                 float step = (moveSpeed + 1) * Time.deltaTime;
                 anim.SetInteger("animState", 2);
                 FaceTarget(player.transform.position);
-                transform.position = Vector3.MoveTowards(transform.position, new Vector3(player.position.x, 0, player.position.z), step);
+                transform.position = Vector3.MoveTowards(transform.position,
+                    new Vector3(player.transform.position.x, 0, player.transform.position.z), step);
             }
         }
         else
