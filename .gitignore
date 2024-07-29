@@ -116,3 +116,4 @@ bh_unicode_properties.cache
 
 # Built Visual Studio Code Extensions
 *.vsix
+.vsconfig
