@@ -7,7 +7,7 @@ using ZombieSpace;
 
 // This script is meant for the player shooting a projectile
 // Dependencies: Level State, Weapon Manager
-// Main Contributors: Olivia Lazar
+// Main Contributors: Olivia Lazar, Tarif Khan
 public class ShootProjectile : MonoBehaviour
 {
     private bool canShoot;              // Whether a projectile can be fired
@@ -16,17 +16,17 @@ public class ShootProjectile : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
         // While the level is active
-        if(LevelManager.IsLevelActive())
+        if (LevelManager.IsLevelActive())
         {
             // If player has a ranged weapon
-            if(WeaponManager.currentWeaponType == WeaponType.Ranged)
+            if (WeaponManager.currentWeaponType == WeaponType.Ranged)
             {
                 ManageShooting();
             }
@@ -56,7 +56,23 @@ public class ShootProjectile : MonoBehaviour
                 canShoot = true;
             }
         }
-    }       
+    }
+
+    private void ManageMeleeAttack()
+    {
+        if (Input.GetButtonDown("Fire1") && canAttack)
+        {
+            MeleeAttack();
+        }
+        else if (!canAttack)
+        {
+            coolDownTimer += Time.deltaTime;
+            if (coolDownTimer >= WeaponManager.swingRate)
+            {
+                canAttack = true;
+            }
+        }
+    }
 
     // Initiates process for shooting a projectile
     private void Shoot()
@@ -78,6 +94,23 @@ public class ShootProjectile : MonoBehaviour
 
         // Update shooting cooldown
         canShoot = false;
+        coolDownTimer = 0;
+    }
+
+
+    private void MeleeAttack()
+    {
+        // Trigger melee attack animation
+        if (WeaponManager.meleeAnimator != null)
+        {
+            WeaponManager.meleeAnimator.SetTrigger("Attack");
+        }
+
+        // Perform melee attack logic (implemented in MeleeAttackHandler)
+        MeleeAttackHandler.PerformMeleeAttack();
+
+        // Update attack cooldown
+        canAttack = false;
         coolDownTimer = 0;
     }
 }

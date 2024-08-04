@@ -7,7 +7,7 @@ using ZombieSpace;
 // This script is meant for managing the player's weapons
 // Main Contributors: Olivia Lazar, Tarif Khan
 public class WeaponManager : MonoBehaviour
-{ 
+{
     public static WeaponType currentWeaponType;
 
     // Melee Weapon Stats
@@ -26,6 +26,9 @@ public class WeaponManager : MonoBehaviour
     public static Transform launchPoint;
     public static Animator rangedAnimator;
 
+    private static string currentMeleeWeapon = "None";
+    private static string currentRangedWeapon = "None";
+
     // Start is called before the first frame update
     void Start()
     {
@@ -33,15 +36,53 @@ public class WeaponManager : MonoBehaviour
         UpdateRangedWeapon("Pistol");
     }
 
-    private static void UpdateMellee() 
+    // Added update to check across the game if a player is switching between weapons.
+    void Update()
     {
-    
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            SwitchToMeleeWeapon();
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            SwitchToRangedWeapon();
+        }
+    }
+
+    // This is the method to switch to melee.
+    private static void SwitchToMeleeWeapon()
+    {
+        currentWeaponType = WeaponType.Melee;
+        UpdateMelee(currentMeleeWeapon);
+        Debug.Log("Switched to Melee Weapon: " + currentMeleeWeapon);
+    }
+
+    // Method to switch to ranged weapon.
+    private static void SwitchToRangedWeapon()
+    {
+        currentWeaponType = WeaponType.Ranged;
+        UpdateRangedWeapon(currentRangedWeapon);
+        Debug.Log("Switched to Ranged Weapon: " + currentRangedWeapon);
+    }
+
+    private static void UpdateMellee(string weapon)
+    {
+        currentMeleeWeapon = weapon;
+        if (weapon == "None")
+        {
+            SetMeleeValues(0, 0);
+        }
+        else if (weapon == "Axe")
+        {
+            SetMeleeValues(30, 1.5f);
+        }
     }
 
     // Updates the behavior of the current ranged weapon
-    private static void UpdateRangedWeapon(string weapon) 
+    private static void UpdateRangedWeapon(string weapon)
     {
-        if(weapon == "None")
+        currentRangedWeapon = weapon
+        if (weapon == "None")
         {
             SetRangeValues(0, 0, 0);
         }
@@ -82,5 +123,18 @@ public class WeaponManager : MonoBehaviour
         projectileDamage = damage;
         projectileSpeed = speed;
         fireRate = rate;
+    }
+
+    private static void SetMeleeValues(int damage, float rate)
+    {
+        meleeDamage = damage;
+        swingRate = rate;
+    }
+
+    public static void SetMeleeVisuals(GameObject weapon, Transform point, Animator anim)
+    {
+        meleeWeapon = weapon;
+        contactPoint = point;
+        meleeAnimator = anim;
     }
 }
