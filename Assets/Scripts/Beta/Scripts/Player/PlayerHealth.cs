@@ -7,7 +7,7 @@ using ZombieSpace;
 
 // This script is meant for the player's health management
 // Dependencies: Level Difficulty
-// Main Contributors: Olivia Lazar
+// Main Contributors: Olivia Lazar, Trin Rist
 public class PlayerHealth : MonoBehaviour
 {
     [SerializeField]
@@ -20,6 +20,7 @@ public class PlayerHealth : MonoBehaviour
 
     private int maxHealth;              // The maximum amount of health the player can have
     private int currentHealth;          // The current amount of health the player has
+    private int protectionAmount = 0;   // The current amount of protection afforded by the player's armor
     private AudioSource hitSFX;
 
     private LevelManager levelManager;
@@ -40,18 +41,15 @@ public class PlayerHealth : MonoBehaviour
         levelManager = FindObjectOfType<LevelManager>();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     // Decrease current health
     public void TakeDamage(int damageAmount)
     {
         if(currentHealth > 0)
         {
-            currentHealth -= damageAmount;
+            int damage = damageAmount - protectionAmount;
+            // used to make sure damage isn't negative if armor strength
+            // is greater than zombie strength
+            currentHealth -= Mathf.Max(damage, 0);
             healthSlider.value = Mathf.Clamp(currentHealth, 0, maxHealth);
             hitSFX.Play();
         }
