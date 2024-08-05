@@ -9,19 +9,7 @@ public class HealthPickup : MonoBehaviour
 {
     public int healthAmount = 10;
     public AudioClip healthPickupSFX;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
+    
     private void OnTriggerEnter(Collider other)
     {
         if(other.CompareTag("Player"))
