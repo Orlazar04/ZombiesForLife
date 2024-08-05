@@ -16,7 +16,6 @@ public class ShootProjectile : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
     }
 
     // Update is called once per frame
@@ -58,22 +57,6 @@ public class ShootProjectile : MonoBehaviour
         }
     }
 
-    private void ManageMeleeAttack()
-    {
-        if (Input.GetButtonDown("Fire1") && canAttack)
-        {
-            MeleeAttack();
-        }
-        else if (!canAttack)
-        {
-            coolDownTimer += Time.deltaTime;
-            if (coolDownTimer >= WeaponManager.swingRate)
-            {
-                canAttack = true;
-            }
-        }
-    }
-
     // Initiates process for shooting a projectile
     private void Shoot()
     {
@@ -94,23 +77,6 @@ public class ShootProjectile : MonoBehaviour
 
         // Update shooting cooldown
         canShoot = false;
-        coolDownTimer = 0;
-    }
-
-
-    private void MeleeAttack()
-    {
-        // Trigger melee attack animation
-        if (WeaponManager.meleeAnimator != null)
-        {
-            WeaponManager.meleeAnimator.SetTrigger("Attack");
-        }
-
-        // Perform melee attack logic (implemented in MeleeAttackHandler)
-        MeleeAttackHandler.PerformMeleeAttack();
-
-        // Update attack cooldown
-        canAttack = false;
         coolDownTimer = 0;
     }
 }
