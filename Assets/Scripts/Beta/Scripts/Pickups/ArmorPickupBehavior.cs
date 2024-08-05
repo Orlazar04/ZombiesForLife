@@ -17,7 +17,7 @@ public class ArmorBehavior : MonoBehaviour
             if (playerHealth != null)
             {
                 // increases the amount of protection the player has from zombies
-                playerHealth.protectionAmount = armorStrength;
+                playerHealth.UpdateProtectionAmount(armorStrength);
                 // destroys the armor after collection
                 Destroy(gameObject, 2);
             }
