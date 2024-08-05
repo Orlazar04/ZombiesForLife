@@ -16,11 +16,13 @@ public class PlayerHealth : MonoBehaviour
     private int reduceHealth = 50;      // The factor by which maximum health is reduced for a level
 
     public Slider healthSlider;
+    public Slider armorSlider;
     public AudioClip deadSFX;
 
     private int maxHealth;              // The maximum amount of health the player can have
     private int currentHealth;          // The current amount of health the player has
     private int protectionAmount = 0;   // The current amount of protection afforded by the player's armor
+    private int maxProtection = 100;   // The current amount of protection afforded by the player's armor
     private AudioSource hitSFX;
 
     private LevelManager levelManager;
@@ -33,6 +35,10 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = maxHealth;
         healthSlider.maxValue = maxHealth;
         healthSlider.value = maxHealth;
+
+        // Initiate armor GUI
+        armorSlider.maxValue = maxProtection;
+        armorSlider.value = protectionAmount;
 
         // Initialize sound
         hitSFX = gameObject.GetComponent<AudioSource>();
@@ -73,6 +79,13 @@ public class PlayerHealth : MonoBehaviour
     public void UpdateHealthRange(int amount)
     {
         maxHealth += amount;
+    }
+
+    // Updates armor slider upon armor pickup
+    public void UpdateProtectionAmount(int amount)
+    {
+        protectionAmount = Mathf.Min(amount, maxProtection);
+        armorSlider.value = protectionAmount;
     }
 
     // Initiates procedure for when player dies
