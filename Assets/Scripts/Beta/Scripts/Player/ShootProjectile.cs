@@ -13,11 +13,6 @@ public class ShootProjectile : MonoBehaviour
     private bool canShoot;              // Whether a projectile can be fired
     private float coolDownTimer;        // The current timer for when a projectile can be fired again
 
-    // Start is called before the first frame update
-    void Start()
-    {
-    }
-
     // Update is called once per frame
     void Update()
     {
