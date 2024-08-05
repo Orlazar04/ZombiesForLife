@@ -12,10 +12,4 @@ public class InvisibleWalls : MonoBehaviour
     {
         gameObject.GetComponent<Renderer>().enabled = false;
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }
