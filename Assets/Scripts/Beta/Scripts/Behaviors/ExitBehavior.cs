@@ -15,12 +15,6 @@ public class ExitBehavior : MonoBehaviour
         levelManager = FindObjectOfType<LevelManager>();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     private void OnTriggerEnter(Collider other)
     {
         if(other.CompareTag("Player"))
